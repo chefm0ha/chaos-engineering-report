@@ -3,18 +3,3 @@
 % =====================================================
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-\textbf{Objectif.} Valider la robustesse d'une application microservices face à des défaillances
-contrôlées, conformément au sujet \#6 « Résilience et Chaos Engineering » (déployer, injecter des
-fautes, mesurer l'impact, expérimenter la tolérance, conclure).
-
-\textbf{Approche.} (i) Déploiement Docker Compose avec réplicas et load balancer ; (ii) Observabilité
-Micrometer/Prometheus/Grafana/cAdvisor ; (iii) Campagnes de chaos via Pumba ; (iv) Mesures
-de performance (JMeter) et métriques métier (ex.\ nombre de commandes/min) ; (v) Stratégies de
-tolérance (load balancing, réplication, circuit breakers) et analyse.
-
-\textbf{Contributions.} Un environnement reproductible incluant configuration des services, des
-dashboards, et un protocole expérimental avec banque de scénarios.
-
-\paragraph{Mini-conclusion.}
-Le cadre expérimental est défini : nous allons d'abord déployer l'application, puis
-introduire des pannes mesurées, avant de proposer et d'évaluer des mécanismes de tolérance.
