@@ -1,0 +1,15 @@
+% =====================================================
+% CONCLUSION & RECOMMANDATIONS
+% =====================================================
+\chapter*{Conclusion et Recommandations}
+\addcontentsline{toc}{chapter}{Conclusion et Recommandations}
+\textbf{Bilan.} L'environnement de chaos a permis d'objectiver la résilience : les fautes unitaires sont
+bien absorbées tandis que les pannes en cascade dégradent fortement p95 et la disponibilité.
+
+\textbf{Recommandations.}
+\begin{enumerate}
+  \item Tester en continu (\textbf{chaos en CI} sur un environnement dédié) avec budgets de garde.
+  \item Renforcer l'isolement inter-services (timeouts, \textbf{circuit breakers}, backoff, bulkheads).
+  \item Ajuster finement le \textbf{load balancing} et les \textbf{health checks} (timeouts courts, \#réplicas).
+  \item Étudier un \textbf{service mesh} (Istio) pour la gestion fine des \textit{retries}, timeouts, mTLS et observabilité.
+\end{enumerate}

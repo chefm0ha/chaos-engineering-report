@@ -1,0 +1,27 @@
+% =====================================================
+% ANNEXES
+% =====================================================
+\appendix
+\chapter{Annexes}
+
+\section{Commandes utiles}
+\begin{lstlisting}[caption={Démarrage / arrêt stack}]
+docker compose up --build -d
+docker compose down -v
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Accès interfaces}]
+API Gateway:      http://localhost:9080
+Grafana:          http://localhost:3000  (admin / admin)
+Prometheus:       http://localhost:9091
+HAProxy Stats:    http://localhost:8404/stats
+cAdvisor:         http://localhost:8092
+\end{lstlisting}
+
+\section{Check-list de reproduction}
+\begin{itemize}
+  \item Cloner le repo, \texttt{docker compose up -d}.
+  \item Importer les dashboards Grafana (JSON) et vérifier les cibles Prometheus (\texttt{/targets}).
+  \item Lancer JMeter (scénarios .jmx).
+  \item Exécuter Pumba (scénarios de pannes), relever métriques et logs.
+\end{itemize}

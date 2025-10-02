@@ -1,0 +1,58 @@
+% =====================================================
+% CHAPITRE 3 : M E S U R E S  D ' I M P A C T
+% =====================================================
+\chapter{Mesurer l'impact des fautes injectées}
+\label{chap:mesures}
+
+\section{Métriques et panneaux Grafana}
+\begin{itemize}
+  \item \textbf{Disponibilité (Uptime)} : \texttt{up\{instance="product-service:8082"\}}.
+  \item \textbf{Latence p95} : \texttt{histogram\_quantile(0.95, rate(http\_server\_requests\_seconds\_bucket[1m]))}.
+  \item \textbf{Taux d'erreurs} : \texttt{rate(...\{status=~"5.."\}[1m]) / rate(...[1m])}.
+  \item \textbf{Débit (Throughput)} : \texttt{sum(rate(http\_server\_requests\_seconds\_count[1m]))}.
+  \item \textbf{Ressources conteneur} : CPU/RAM via cAdvisor.
+\end{itemize}
+
+\section{Synthèse attendue par scénario}
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Scénario} & \textbf{Uptime} & \textbf{p95} & \textbf{Erreurs} & \textbf{Throughput} \\
+\midrule
+Baseline & $\approx$ 100\% & 50--100 ms & $\approx$ 0\% & Stable/élevé \\
+Stop 30s & $\approx$ 98.3\% (fenêtre 5min) & $\infty$ (timeouts) & 100\% (pendant 30s) & 0 puis reprise \\
+Kill     & 0\% (jusqu'au restart) & N/A & $\approx$ 100\% & 0 \\
+Delay 500$\pm$100ms & 100\% & 600--700 ms & 0--10\% & $\downarrow$ (20--40\%) \\
+Loss 20\% & 90--95\% & 150--300 ms & 5--15\% & $\downarrow$ (20--40\%) \\
+Chaos continu & $\sim$99\% & pics périodiques & pics & oscillant \\
+\bottomrule
+\end{tabular}
+\caption{Impact des fautes (à remplacer par vos valeurs mesurées).}
+\end{table}
+
+\section{Captures et corrélation temporelle}
+Nous insérons cinq captures Grafana : (i) baseline, (ii) début injection, (iii) pic d'erreurs/latence,
+(iv) fin injection/début recovery, (v) retour à la normale. Les \textit{annotations} Grafana marquent les commandes Pumba.
+
+\begin{figure}[H]
+\centering
+\placeholder{0.85\textwidth}{5cm}
+\caption{Latence p95 pendant un \texttt{netem delay} (courbe avec pic).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\placeholder{0.85\textwidth}{5cm}
+\caption{Taux d'erreurs (5xx) pendant \texttt{stop}/\texttt{kill}.}
+\end{figure}
+
+\section{Discussion}
+Sans réplication ni mécanismes de résilience (retry/circuit breaker), les fautes d'arrêt/kill
+entraînent une indisponibilité complète du service ciblé. Les fautes réseau (\textit{delay}/\textit{loss})
+conservent la disponibilité mais dégradent fortement la performance (p95 ↑, débit ↓).
+
+\paragraph{Recommandations (priorité).}
+(i) \textbf{Réplication} ($\geq$3) pour supprimer le SPOF ; 
+(ii) \textbf{Resilience4j} (Retry + Circuit Breaker) côté clients ; 
+(iii) \textbf{SLO + alerting} (Prometheus/Grafana) sur p95 et error rate.

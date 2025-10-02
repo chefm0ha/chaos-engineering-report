@@ -1,0 +1,174 @@
+\documentclass[a4paper,12pt,twoside]{report}
+
+% ====== Encodage & langue ======
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ====== Mise en page ======
+\usepackage[top=2.8cm, bottom=2.8cm, left=2.2cm, right=2.2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\leftmark}
+\fancyhead[RE]{\rightmark}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[L]{ENSIAS - IDSIT 2024/2025}
+\fancyfoot[R]{Chaos Engineering}
+
+% ====== Liens ======
+\usepackage[hidelinks]{hyperref}
+
+% ====== Graphiques & tableaux ======
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf}
+
+% ====== Code ======
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  stringstyle=\color{red!60!black},
+  commentstyle=\color{gray!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!20},
+  tabsize=2
+}
+\lstdefinelanguage{YAML}{%
+  keywords={true,false,null,y,n},
+  sensitive=false,
+  comment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+% ====== Boîte "placeholder" pour figures ======
+\usepackage{tikz}
+\newcommand{\placeholder}[2]{%
+\begin{tikzpicture}
+\node[draw, dashed, minimum width=#1, minimum height=#2, align=center] {Placez ici la figure\\ \footnotesize (capture Grafana/JMeter/diagramme)};
+\end{tikzpicture}
+}
+
+% ====== Environnements annexes ======
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.2cm}
+\setlist[enumerate]{leftmargin=1.2cm}
+
+% ====== Métadonnées ======
+\newcommand{\titre}{Résilience et Chaos Engineering}
+\newcommand{\encadrant}{Pr.\,\,Karima MOUMANE\,}
+\newcommand{\filiere}{IDSIT}
+\newcommand{\ecole}{ENSIAS}
+
+% =================== DEBUT DOCUMENT ===================
+\begin{document}
+
+% ---------- Page de garde ----------
+\begin{titlepage}
+\begin{center}
+\includegraphics[width=0.22\textwidth]{ensias}\hfill
+\includegraphics[width=0.22\textwidth]{um5}\\[1.5cm]
+
+{\Large \textbf{\ecole} - Filière \textbf{\filiere}}\\[0.6cm]
+{\large Année universitaire 2024/2025}\\[1.5cm]
+
+\rule{\textwidth}{1pt}\\[0.4cm]
+{\LARGE \textbf{\titre}}\\[0.1cm]
+{\large \textit{Microservices Resilience Testing with Chaos Engineering}}\\[0.4cm]
+\rule{\textwidth}{1pt}\\[1.4cm]
+
+\begin{tabular}{p{0.45\textwidth}p{0.45\textwidth}}
+\textbf{Réalisé par :} & \textbf{Encadré par :}\\
+Mokhtar BENKIRANE & \encadrant\\
+Mohammed FADLOUALLAH & \\
+Firas MAHBOUB & \\
+Aymane JAMAL & \\
+\end{tabular}
+
+\vfill
+Rabat, \today
+\end{center}
+\end{titlepage}
+
+% ---------- Remerciements (optionnel) ----------
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+Je remercie l'équipe pédagogique de l'ENSIAS pour l'encadrement, ainsi que toutes les personnes ayant contribué aux expérimentations et à l'analyse des résultats.
+
+% ---------- Résumé / Abstract ----------
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Ce rapport présente la mise en place d'un environnement complet de \textit{Chaos Engineering}
+pour une architecture microservices Spring Boot conteneurisée. Nous déployons l'application avec
+Docker Compose, instrumentons l'observabilité (Prometheus, Grafana, cAdvisor), injectons des
+pannes (Pumba: arrêt/kill de conteneurs, latence, perte de paquets) et mesurons l'impact
+(JMeter, métriques techniques et métier). Nous évaluons ensuite des stratégies de tolérance
+(load balancing HAProxy/Nginx, réplication, circuit breakers Resilience4j) et émettons des
+recommandations pratiques.
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This report builds a full \textit{Chaos Engineering} environment for a Spring Boot microservices
+architecture deployed with Docker. We instrument observability (Prometheus, Grafana, cAdvisor),
+inject failures (Pumba: stop/kill, latency, loss) and measure impact (JMeter, technical \& business
+metrics). We then evaluate tolerance strategies (HAProxy/Nginx load balancing, replication,
+Resilience4j circuit breakers) and conclude with actionable recommendations.
+
+% ---------- Listes ----------
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+
+% ---------- Abréviations ----------
+\chapter*{Liste des abréviations}
+\addcontentsline{toc}{chapter}{Liste des abréviations}
+\begin{tabular}{@{}ll@{}}
+API & Application Programming Interface\\
+CD/CI & Continuous Delivery / Continuous Integration\\
+p95 & 95\textsuperscript{e} percentile (latence)\\
+RPS & Requêtes par seconde\\
+SLA & Service Level Agreement\\
+\end{tabular}
+\newpage
+
+% =====================================================
+% CHAPITRES
+% =====================================================
+\input{chapters/introduction}
+
+\input{chapters/chapter1-deployment}
+
+\input{chapters/chapter2-fault-injection}
+
+\input{chapters/chapter3-impact-measurement}
+
+
+\input{chapters/chapter4-tolerance-strategies}
+
+
+
+\input{chapters/conclusion}
+
+\input{chapters/annexes}
+
+\end{document}

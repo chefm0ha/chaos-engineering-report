@@ -1,0 +1,108 @@
+% =====================================================
+% CHAPITRE 1 : DE P L O I E M E N T
+% =====================================================
+\chapter{Déploiement d'une application web en conteneurs}
+
+\section{Architecture et composants}
+L'architecture cible comprend (exemple) : \textbf{User}, \textbf{Product}, \textbf{Order}, \textbf{Payment} Services,
+un \textbf{API Gateway}, un load balancer (\textbf{HAProxy} ou \textbf{Nginx}), des bases de données isolées
+(par service) et un cache \textbf{Redis}. Chaque service expose \texttt{/actuator/prometheus}.
+
+\begin{figure}[H]
+\centering
+\placeholder{0.85\textwidth}{5cm}
+\caption{Schéma d'architecture microservices derrière un load balancer.}
+\end{figure}
+
+\section{Docker Compose (extraits)}
+\begin{lstlisting}[language=YAML, caption={docker-compose.yml (extrait – services, scaling)}, label={lst:compose}]
+version: "3.9"
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports: ["9080:9080"]
+    depends_on: [haproxy]
+
+  product-service:
+    build: ./product-service
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=prometheus,health,info
+    deploy:
+      replicas: 2
+    ports: ["9082:9082"]
+
+  order-service:
+    build: ./order-service
+    deploy:
+      replicas: 3
+    ports: ["9084:9084"]
+
+  haproxy:
+    image: haproxy:2.9
+    volumes:
+      - ./infra/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports: ["80:80","8404:8404"]  # 8404 = HAProxy stats
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9091:9090"]
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports: ["8092:8080"]
+
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3000:3000"]
+\end{lstlisting}
+
+\section{Load balancer (HAProxy)}
+\begin{lstlisting}[caption={infra/haproxy/haproxy.cfg (extrait)}, label={lst:haproxy}]
+global
+  daemon
+defaults
+  mode http
+  timeout connect 5s
+  timeout client  30s
+  timeout server  30s
+
+frontend fe_api
+  bind *:80
+  default_backend be_product
+
+backend be_product
+  balance roundrobin
+  option httpchk GET /actuator/health
+  server p1 product-service:9082 check
+  server p2 product-service:9082 check backup
+
+listen stats
+  bind *:8404
+  stats enable
+  stats uri /stats
+\end{lstlisting}
+
+\section{Observabilité (Prometheus/Grafana)}
+\begin{lstlisting}[language=YAML, caption={infra/monitoring/prometheus.yml (extrait)}, label={lst:prom}]
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: 'spring-apps'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['product-service:9082','order-service:9084','api-gateway:9080']
+
+  - job_name: 'haproxy'
+    static_configs:
+      - targets: ['haproxy:8404']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+\end{lstlisting}
+
+\paragraph{Mini-conclusion.}
+L'environnement de déploiement (services, load balancer et observabilité) est prêt pour
+les campagnes de chaos et de mesure.

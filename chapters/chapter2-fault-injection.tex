@@ -1,0 +1,89 @@
+% =====================================================
+% CHAPITRE 2 : I N J E C T I O N  D E  F A U T E S
+% =====================================================
+\chapter{Injection de fautes avec Pumba (focus expérimental)}
+\label{chap:pumba}
+
+\section{Contexte et hypothèses}
+Nous exécutons les tests sous \textbf{Docker Compose} avec \textbf{Spring Cloud Gateway} comme unique point d'entrée (pas de HAProxy/Nginx externe). 
+Chaque microservice possède \textbf{une seule instance} (pas de \texttt{deploy.replicas}) et aucune politique de redémarrage (\texttt{restart} non définie). 
+En conséquence, une panne du conteneur \texttt{product-service} provoque une indisponibilité totale de ce service (SPOF).
+
+\section{Cibles et outillage}
+\begin{itemize}
+  \item \textbf{Cible} : \texttt{product-service} (regex exacte \texttt{re2:\^{}product-service\$}).
+  \item \textbf{Réseau} : \texttt{ecommerce-network} (bridge).
+  \item \textbf{Outils} : Pumba \texttt{gaiaadm/pumba:0.9.0} ; image \texttt{gaiadocker/iproute2} pour \texttt{tc}.
+\end{itemize}
+
+\section{Scénarios de pannes}
+\subsection{Arrêt temporaire (Stop)}
+\begin{lstlisting}[caption={Arrêt 30s (graceful downtime)}]
+docker run -it --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --network ecommerce-network \
+  gaiaadm/pumba:0.9.0 \
+  stop --duration 30s --time 10s re2:^product-service$
+\end{lstlisting}
+Effet attendu : indisponibilité de \texttt{product-service} pendant 30s, puis reprise immédiate.
+
+\subsection{Crash (Kill)}
+\begin{lstlisting}[caption={Kill gracieux vs brutal}]
+# SIGTERM (gracieux)
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  gaiaadm/pumba:0.9.0 \
+  kill --signal SIGTERM re2:^product-service$
+
+# SIGKILL (brutal)
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  gaiaadm/pumba:0.9.0 \
+  kill --signal SIGKILL re2:^product-service$
+\end{lstlisting}
+Sans politique \texttt{restart}, le conteneur reste \textbf{DOWN} après \texttt{kill}.
+
+\subsection{Latence réseau (Netem Delay)}
+\begin{lstlisting}[caption={Latence 500ms ±100ms, 2 minutes}]
+docker run -it --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --network ecommerce-network \
+  gaiaadm/pumba:0.9.0 netem \
+    --tc-image gaiadocker/iproute2 \
+    --duration 2m delay \
+      --time 500 --jitter 100 --distribution normal \
+    re2:^product-service$
+\end{lstlisting}
+
+\subsection{Perte de paquets (Netem Loss)}
+\begin{lstlisting}[caption={Perte 20\% de paquets, 2 minutes}]
+docker run -it --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --network ecommerce-network \
+  gaiaadm/pumba:0.9.0 netem \
+    --tc-image gaiadocker/iproute2 \
+    --duration 2m loss --percent 20 \
+    re2:^product-service$
+\end{lstlisting}
+
+\subsection{Chaos continu (micro-coupures)}
+\begin{lstlisting}[caption={Cycles de micro-latence (15s toutes 30s)}]
+docker run -it --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  gaiaadm/pumba:0.9.0 \
+  --interval 30s --random netem \
+    --tc-image gaiadocker/iproute2 \
+    --duration 15s delay --time 200 \
+    re2:^product-service$
+\end{lstlisting}
+
+\paragraph{Plan d'exécution JMeter.}
+Baseline (5 min) → Injection (2--5 min) → Recovery (5 min), avec:
+\begin{itemize}
+  \item Test \textbf{Product}: 100 utilisateurs, ramp-up 60s, 20 itérations.
+  \item Test \textbf{E2E}: 20 utilisateurs, ramp-up 60s, 5 itérations.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\placeholder{0.85\textwidth}{5cm}
+\caption{Chronologie Baseline/Chaos/Recovery avec marqueurs d'événements.}
+\end{figure}
