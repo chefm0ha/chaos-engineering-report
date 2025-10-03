@@ -127,6 +127,12 @@ Ce scénario E2E est particulièrement sensible aux pannes, car il sollicite l'e
 
 \subsection{Présentation de Pumba}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{images/Pumba.png}
+\caption{Pumba}
+\end{figure}
+
 Pumba est un outil de chaos engineering spécialisé pour Docker, permettant d'injecter des fautes au niveau conteneur et réseau. Il s'interface directement avec l'API Docker pour manipuler les conteneurs en cours d'exécution.
 
 \textbf{Capacités principales} :
@@ -142,7 +148,7 @@ Pumba est un outil de chaos engineering spécialisé pour Docker, permettant d'i
 \subsubsection{Contexte et contraintes}
 
 \begin{itemize}
-    \item \textbf{Point d'entrée unique} : Spring Cloud Gateway (pas de HAProxy/Nginx externe)
+    \item \textbf{Point d'entrée unique} : Spring Cloud Gateway 
     \item \textbf{Instances uniques} : Chaque service déployé en 1 seule réplica
     \item \textbf{Pas de politique de redémarrage} : \texttt{restart} non défini dans docker-compose.yml
     \item \textbf{Conséquence} : Une panne de conteneur = indisponibilité totale du service (SPOF)

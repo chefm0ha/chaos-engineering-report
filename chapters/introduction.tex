@@ -3,3 +3,24 @@
 % =====================================================
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
+
+Les architectures \textit{microservices} offrent modularité et scalabilité, au prix d'une plus grande \textit{fragilité systémique}: 
+défaillances en cascade, variabilité réseau, hétérogénéité des déploiements. 
+Le \textbf{chaos engineering} propose de rendre ces systèmes plus \textit{robustes} en exposant volontairement leurs faiblesses sous observation.
+
+Dans ce rapport, nous construisons une plateforme e-commerce conteneurisée (5 microservices, API Gateway, PostgreSQL) et une chaîne d'observabilité (\textbf{Prometheus}, \textbf{Grafana}, \textbf{cAdvisor}). 
+Nous combinons \textbf{Apache JMeter} pour la charge et \textbf{Pumba} pour l'injection de fautes (arrêt/kill, \texttt{netem} delay/loss, micro-coupures). 
+Notre protocole \textit{Baseline → Chaos → Recovery} mesure l'impact sur les \textit{SLI} et la disponibilité, puis nous introduisons des \textbf{mécanismes de tolérance} (réplication et load balancing) pour atténuer ces effets.
+
+\textbf{Contributions}:
+(i) une méthodologie reproductible de tests de résilience sur Docker; 
+(ii) une matrice de scénarios JMeter × Pumba et leurs effets typiques sur p95/throughput/erreurs; 
+(iii) une stratégie pragmatique de tolérance par réplication + équilibrage (\textit{Spring Cloud LoadBalancer}) assortie de recommandations opérationnelles.
+
+\textbf{Organisation}:
+le Chapitre 1 décrit l'architecture et le déploiement; 
+le Chapitre 2 détaille charge et fautes; 
+le Chapitre 3 présente le monitoring; 
+le Chapitre 4 mesure l'impact; 
+le Chapitre 5 expose la stratégie de tolérance; 
+la conclusion synthétise résultats et recommandations.

@@ -89,7 +89,7 @@
 \includegraphics[width=0.22\textwidth]{um5}\\[1.5cm]
 
 {\Large \textbf{\ecole} - Filière \textbf{\filiere}}\\[0.6cm]
-{\large Année universitaire 2024/2025}\\[1.5cm]
+{\large Année universitaire 2025/2026}\\[1.5cm]
 
 \rule{\textwidth}{1pt}\\[0.4cm]
 {\LARGE \textbf{\titre}}\\[0.1cm]
@@ -109,18 +109,41 @@ Rabat, \today
 \end{center}
 \end{titlepage}
 
-% ---------- Remerciements (optionnel) ----------
+% ---------- Remerciements ----------
 \chapter*{Remerciements}
 \addcontentsline{toc}{chapter}{Remerciements}
-Je remercie l'équipe pédagogique de l'ENSIAS pour l'encadrement, ainsi que toutes les personnes ayant contribué aux expérimentations et à l'analyse des résultats.
 
-% ---------- Résumé / Abstract ----------
+Nous tenons à remercier chaleureusement l'ensemble du corps enseignant de l'ENSIAS pour la qualité de l'encadrement et des échanges pédagogiques tout au long de ce projet. 
+Nos remerciements s'adressent en particulier à \textbf{\encadrant} pour ses conseils, ses retours méthodologiques et son exigence scientifique, qui ont guidé notre démarche expérimentale.
+Nous exprimons également notre gratitude aux membres de nos promotions et à toutes les personnes ayant contribué à la mise en place de l'infrastructure, à l'exécution des tests et à l'analyse des résultats. 
+Enfin, nous remercions nos proches pour leur soutien constant.
+
+
+% ---------- Résumé ----------
 \chapter*{Résumé}
 \addcontentsline{toc}{chapter}{Résumé}
 
+Ce travail étudie la \textbf{résilience} d'une plateforme e-commerce \textit{microservices} déployée avec Docker et instrumentée par \textbf{Prometheus}, \textbf{Grafana} et \textbf{cAdvisor}. 
+La méthodologie combine des \textbf{tests de charge} (\textit{Apache JMeter}) et l'\textbf{injection de fautes} (\textit{Pumba}) afin d'observer, sous charge réaliste, la dégradation des \textit{SLI} (latence p95, throughput, taux d'erreurs) et la \textit{disponibilité}. 
+Nous évaluons plusieurs scénarios: arrêt gracieux et crash de conteneur, latence et perte réseau (\texttt{netem}), et micro-coupures périodiques. 
+Les résultats montrent que, dans une topologie à instance unique par service, \textbf{product-service} constitue un \textit{SPOF} critique: un \texttt{kill} sans politique de redémarrage conduit à une indisponibilité complète, tandis qu'une simple latence réseau dégrade fortement p95 et le débit. 
+Nous proposons ensuite une \textbf{stratégie de tolérance} fondée sur la réplication et un \textbf{load balancing} au niveau de l'API Gateway (Spring Cloud LoadBalancer), complétée par des garde-fous \textit{timeouts/retries/circuit breaker}. 
+Cette approche réduit l'impact des pannes et stabilise les métriques sous charge. 
+Le rapport fournit la configuration \texttt{docker-compose}, les scénarios JMeter et les commandes Pumba, ainsi que des recommandations opérationnelles pour intégrer des exercices de chaos dans le cycle de vie applicatif.
 
+
+% ---------- Abstract ----------
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
+
+This project investigates the \textbf{resilience} of a Docker-based \textit{microservices} e-commerce platform instrumented with \textbf{Prometheus}, \textbf{Grafana}, and \textbf{cAdvisor}. 
+Our method combines \textbf{load testing} (\textit{Apache JMeter}) with \textbf{fault injection} (\textit{Pumba}) to observe, under realistic load, the degradation of \textit{SLIs} (p95 latency, throughput, error rate) and service \textit{availability}. 
+We evaluate graceful stops and hard crashes of containers, network delay and packet loss via \texttt{netem}, and periodic micro-outages. 
+In a single-instance-per-service topology, \textbf{product-service} acts as a critical \textit{SPOF}: a container \texttt{kill} without restart policy leads to full outage, while added latency significantly worsens p95 and throughput. 
+We then implement a \textbf{tolerance strategy} based on replication and \textbf{load balancing} at the API Gateway (Spring Cloud LoadBalancer), complemented with timeouts, retries, and circuit breakers. 
+This reduces failure impact and stabilizes metrics under load. 
+We provide \texttt{docker-compose} snippets, JMeter scenarios, and Pumba commands, and conclude with actionable recommendations to embed chaos exercises into the software delivery lifecycle.
+
 
 
 % ---------- Listes ----------
@@ -134,11 +157,20 @@ Je remercie l'équipe pédagogique de l'ENSIAS pour l'encadrement, ainsi que tou
 \addcontentsline{toc}{chapter}{Liste des abréviations}
 \begin{tabular}{@{}ll@{}}
 API & Application Programming Interface\\
-CD/CI & Continuous Delivery / Continuous Integration\\
+CI/CD & Continuous Integration / Continuous Delivery\\
+DB & DataBase\\
+GC & Garbage Collector\\
+HTTP & HyperText Transfer Protocol\\
+JVM & Java Virtual Machine\\
 p95 & 95\textsuperscript{e} percentile (latence)\\
 RPS & Requêtes par seconde\\
 SLA & Service Level Agreement\\
+SLI & Service Level Indicator\\
+SLO & Service Level Objective\\
+SPOF & Single Point of Failure\\
+OOM & Out Of Memory\\
 \end{tabular}
+
 \newpage
 
 % =====================================================
@@ -150,15 +182,12 @@ SLA & Service Level Agreement\\
 
 \input{chapters/chapter2-fault-injection}
 
-\input{chapters/chapter3-impact-measurement}
+\input{chapters/chapitre3-Monitoring}
 
+\input{chapters/chapter3-impact-measurement}
 
 \input{chapters/chapter4-tolerance-strategies}
 
-
-
 \input{chapters/conclusion}
-
-\input{chapters/annexes}
 
 \end{document}

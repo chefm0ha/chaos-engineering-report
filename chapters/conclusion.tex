@@ -3,3 +3,24 @@
 % =====================================================
 \chapter*{Conclusion et Recommandations}
 \addcontentsline{toc}{chapter}{Conclusion et Recommandations}
+
+\textbf{Bilan.}
+Les expériences montrent que, dans une topologie à \textit{instance unique}, certaines fautes (\texttt{kill} sans restart) provoquent une indisponibilité totale (\textit{SPOF}), tandis que les fautes réseau (\texttt{delay}/\texttt{loss}) dégradent fortement la \textit{latence p95} et le \textit{throughput} sous charge continue. 
+Le protocole \textit{Baseline → Chaos → Recovery} et l'instrumentation Prometheus/Grafana permettent de quantifier précisément ces effets et d'objectiver les temps de récupération.
+
+\textbf{Améliorations implémentées.}
+La \textbf{réplication} des services critiques couplée à un \textbf{équilibrage de charge} (Spring Cloud LoadBalancer) atténue l'impact des pannes unitaires et lisse la performance. 
+Combinée à des garde-fous applicatifs (timeouts, retries avec backoff, circuit breakers, \textit{bulkheads}), cette approche stabilise les \textit{SLI} observés.
+
+\textbf{Recommandations opérationnelles.}
+\begin{itemize}
+  \item \textbf{Disponibilité \& redémarrage}: définir des politiques \texttt{restart: always/on-failure}, sondes \texttt{healthcheck}, et \texttt{readiness/liveness} (si orchestrateur K8s).
+  \item \textbf{Résilience applicative}: fixer des \textit{timeouts} cohérents bout-en-bout, activer \textit{retries} bornés, \textit{circuit breakers} et \textit{bulkheads}; gérer l'\textit{idempotence} des opérations.
+  \item \textbf{Topologie}: répliquer les services à fort trafic (ex. \textit{product-service}) et isoler les dépendances sensibles (DB, cache) avec limites de connexion et \textit{pooling} maîtrisé.
+  \item \textbf{Observabilité}: définir des \textbf{SLO} (p95, erreurs, disponibilité), des alertes (seuils p95, saturation CPU/mémoire, erreurs 5xx) et des \textit{dashboards} orientés parcours métier.
+  \item \textbf{Chaos continu}: intégrer des \textit{game days} et tests Pumba réguliers (scénarios \texttt{stop/kill/netem}), idéalement \textit{shift-left} (en pré-prod) et \textit{canary} en prod.
+  \item \textbf{Capacité \& coût}: utiliser l’\textit{auto-scaling} sur métriques (CPU, RPS, p95), surveiller le coût des replicas et la contention des ressources partagées.
+\end{itemize}
+
+\textbf{Perspectives.}
+Passer à un orchestrateur (Kubernetes) pour des stratégies natives (HPA, PodDisruptionBudget, PodAntiAffinity), introduire un \textbf{service mesh} (observabilité L7, \textit{retries}/\textit{timeouts} centralisés) et tester des fautes \textit{stateful} (DB failover, \textit{network partition}) afin d'élargir le périmètre de résilience.
